@@ -58,10 +58,10 @@ if __name__ == '__main__':
     players = Players()
     #pprint.pprint(players.players)
     #players.print_players_names()
-    #players.print_player_stats("Seth Smith")
-    players.print_top_player('HR')
-    players.print_top_player('OBP')
-    players.print_top_player('AVG')
+    players.print_player_stats("Seth Smith")
+    #players.print_top_player('HR')
+    #players.print_top_player('OBP')
+    #players.print_top_player('AVG')
 
 
 
