@@ -15,14 +15,49 @@ cookies = dict([('SWID', '{9B885E8D-3D84-49B9-885E-8D3D8429B989}'), ('broadbandA
                 ('userAB', '9'), ('CRBLM_LAST_UPDATE', '1366235692:{9B885E8D-3D84-49B9-885E-8D3D8429B989}')])
 
 
-class OwnerPageProcessor:
-    def process_owners_page(self):
-        #owner_info_response = requests.get(owner_info_url, cookies=cookies)
-        #self.owners_page = document_fromstring(owner_info_response.text)
-        self.owners_page = parse('ownerinfo.html').getroot()
+class OwnerPageScraper:
+    """Processes ElementTree of the owner info page on an ESPN fantasy baseball league
+    can create sets of Owners and Teams and correlate them
+
+    attributes: owners, teams
+    """
+
+    def __init__(self, owners_page_root):
+        self.owners_page_root = owners_page_root
+        self.owners = set()
+        self.teams = set()
+        self.owner_rows = filter(self.get_owners_rows, self.owners_page_root.find_class('ownerRow'))
 
     def get_owners_rows(self, x):
         return x.get('style') is None
+
+    def scrape_owners_page(self):
+        self.build_owners()
+        self.build_teams()
+        self.correlate_teams_and_owners()
+
+    def build_owners(self):
+        for row in self.owner_rows:
+            owner = Owner(row.get('id'))
+            owner.name = row.get_element_by_id('ownerspan' + owner.id).text_content()
+            self.owners.add(owner)
+
+    def build_teams(self):
+        team_ids = set()
+        for row in self.owner_rows:
+            team_ids.add(row.get('id')[:-2])
+        for id in team_ids:
+            team = Team(id)
+            this_team_element = self.owners_page_root.get_element_by_id(id + "-0")
+            team.abbreviation = this_team_element[1].text_content()
+            team.name = this_team_element[2].text_content()
+            team.division = this_team_element[3].text_content()
+            self.teams.add(team)
+    def correlate_teams_and_owners(self):
+        for team in self.teams:
+            for owner in self.owners:
+                if team.id == owner.id[:-2]:
+                    team.add_owner(owner)
 
 
 class Team:
@@ -61,25 +96,11 @@ class Owner:
 
 
 if __name__ == '__main__':
-    processor = OwnerPageProcessor()
-    processor.process_owners_page()
-    owners = set()
-    owner_rows = filter(processor.get_owners_rows, processor.owners_page.find_class('ownerRow'))
-    for row in owner_rows:
-        owner = Owner(row.get('id'))
-        owner.name = row.get_element_by_id('ownerspan' + owner.id).text_content()
-        owners.add(owner)
-        #for owner in owners: print 'Owner name is ' + owner.name + " and owner id is " + owner.id
-    team_ids = set()
-    for row in owner_rows:
-        team_ids.add(row.get('id')[:-2])
-    teams = set()
-    for id in team_ids:
-        team = Team(id)
-        this_team_element = processor.owners_page.get_element_by_id(id + "-0")
-        team.abbreviation = this_team_element[1].text_content()
-        team.name = this_team_element[2].text_content()
-        team.division = this_team_element[3].text_content()
-        teams.add(team)
-    for t in teams:
-        print 'team id is ' + t.id + ' and name is ' + t.name + ' and abbr is ' + t.abbreviation + ' and division is ' + t.division
+    owner_info_response = requests.get(owner_info_url, cookies=cookies)
+    owners_page_root = document_fromstring(owner_info_response.text)
+    #owners_page_root = parse('ownerinfo.html').getroot()
+    scraper = OwnerPageScraper(owners_page_root)
+    scraper.scrape_owners_page()
+    #for owner in scraper.owners: print 'Owner name is ' + owner.name + " and owner id is " + owner.id
+    for o in scraper.owners:
+        print 'owner is ' + o.name + ' and team is ' + o.team.name
