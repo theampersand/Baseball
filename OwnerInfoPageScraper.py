@@ -17,7 +17,7 @@ cookies = dict([('SWID', '{9B885E8D-3D84-49B9-885E-8D3D8429B989}'), ('broadbandA
                 ('userAB', '9'), ('CRBLM_LAST_UPDATE', '1366235692:{9B885E8D-3D84-49B9-885E-8D3D8429B989}')])
 
 
-class OwnerPageScraper:
+class OwnerInfoPageScraper:
     """Processes ElementTree of the owner info page on an ESPN fantasy baseball league
     can create sets of Owners and Teams and correlate them
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     owner_info_response = requests.get(owner_info_url, cookies=cookies)
     owners_page_root = document_fromstring(owner_info_response.text)
     #owners_page_root = parse('ownerinfo.html').getroot()
-    scraper = OwnerPageScraper(owners_page_root)
+    scraper = OwnerInfoPageScraper(owners_page_root)
     scraper.scrape_owners_page()
     #for owner in scraper.owners: print 'Owner name is ' + owner.name + " and owner id is " + owner.id
     for o in scraper.owners:
