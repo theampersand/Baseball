@@ -1,6 +1,8 @@
 __author__ = 'Administrator'
 
 import requests
+from team import Team
+from owner import Owner
 from lxml.html import document_fromstring, parse
 
 owner_info_url = 'http://games.espn.go.com/flb/leaguesetup/ownerinfo?leagueId=54692'
@@ -58,41 +60,6 @@ class OwnerPageScraper:
             for owner in self.owners:
                 if team.id == owner.id[:-2]:
                     team.add_owner(owner)
-
-
-class Team:
-    """Represents a team in a fantasy league
-
-    attributes: id, name, abbreviation, division, owners
-    """
-
-    def __init__(self, team_id):
-        self.id = team_id
-        self.owners = set()
-        self.abbreviation = None
-        self.division = None
-
-    def add_owner(self, owner):
-        self.owners.add(owner)
-        if self is not owner.team:
-            owner.team = self
-
-
-class Owner:
-    """Represents an owner of a team in a fantasy league
-
-    attributes: id, name, team
-    """
-
-    def __init__(self, owner_id):
-        self.id = owner_id
-        self.name = None
-        self.team = None
-
-    def set_team(self, team):
-        self.team = team
-        if self not in team.owners:
-            team.add_owner(self)
 
 
 if __name__ == '__main__':
